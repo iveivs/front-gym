@@ -21,6 +21,7 @@ export type Topic = {
   level: string;
   time: string;
   source: string;
+  focus: string;
   summary: string;
   bullets: string[];
   code: string;
@@ -407,22 +408,22 @@ const [error, setError] = useState(null);`, "Профиль, список зак
 export const topics: Topic[] = seeds.map((item) => enrichTopic({
   ...item,
   summary: makeSummary(item),
-  questions: makeQuestions(item),
+  questions: makeTopicQuestions(item),
 }));
 
-export const tasks: Task[] = [
-  task("Семантическая страница урока", "html", "junior", "Сверстай страницу темы: шапка, навигация, основной материал, блок практики и футер. Используй семантические теги и один h1.", "title = 'Promise и fetch'; sections = ['Конспект', 'Пример', 'Тренировка']", "header + nav + main + article + section + footer"),
-  task("Форма профиля", "html", "junior+", "Сверстай форму профиля с email, именем, городом, чекбоксом подписки и понятными ошибками. Подумай о label, name, autocomplete и required.", "Пользователь не ввёл email и отправил форму", "Форма не отправляется, ошибка связана с email"),
-  task("Адаптивная сетка карточек", "css", "junior", "Сделай сетку карточек тем: на телефоне одна колонка, дальше карточки от 240px, расстояние 12px.", ".topics содержит 12 карточек", "grid-template-columns: repeat(auto-fit, minmax(240px, 1fr))"),
-  task("Липкая боковая навигация", "css", "junior+", "Сделай сайдбар тем липким на десктопе и горизонтальной прокруткой на мобильном.", "Ширина экрана 390px и 1200px", "На телефоне список прокручивается по горизонтали, на десктопе sticky"),
-  task("Нормализация телефона", "js", "junior", "Напиши normalizePhone(value), которая оставляет только цифры и возвращает строку.", "normalizePhone('+7 (999) 123-45-67')", "'79991234567'"),
-  task("Группировка по статусу", "js", "junior+", "Напиши groupByStatus(tasks), которая возвращает объект, где ключ - статус, значение - массив задач.", "[{title:'A', status:'todo'}, {title:'B', status:'done'}]", "{ todo: [{...}], done: [{...}] }"),
-  task("Debounce автопоиска", "js", "junior+", "Напиши debounce(fn, delay) и покажи пример, где запрос поиска отправляется только после паузы во вводе.", "search('r'); search('re'); search('react')", "Через delay вызывается только последний запрос"),
-  task("Безопасный рендер комментариев", "js", "junior+", "Есть массив комментариев с пользовательским текстом. Выведи их в DOM безопасно, не используя innerHTML для текста.", "comments = ['<img onerror=alert(1)>', 'Привет']", "Текст отображается как текст, код не выполняется"),
-  task("React todo list", "react", "junior", "Собери TodoList: input, добавление, удаление, empty state и стабильные key.", "Пользователь добавляет 'Повторить Grid'", "Задача появляется в списке и удаляется по кнопке"),
-  task("React фильтр товаров", "react", "junior", "Сделай ProductFilter: поле поиска, список товаров, фильтрация без мутации исходного массива.", "products = ['MacBook', 'Mouse', 'Keyboard']; query = 'mo'", "['Mouse']"),
-  task("React загрузка профиля", "react", "junior+", "Собери компонент ProfileLoader с loading, error, retry и отменой устаревшего запроса при смене id.", "userId меняется с 1 на 2 до завершения первого запроса", "На экране данные пользователя 2, старый ответ игнорируется"),
-  task("React custom hook localStorage", "react", "junior+", "Напиши useLocalStorage для сохранения прогресса темы. Хук должен читать стартовое значение и записывать изменения.", "useLocalStorage('progress', {})", "После обновления state значение появляется в localStorage"),
+export const tasks: Task[] = seeds.flatMap(makeTopicTasks).concat([
+  task("Семантическая страница урока", "html", "junior", "Сверстай страницу темы: шапка, навигация, основной материал, блок практики и футер. Используй семантические теги и один h1.", "title = 'Promise и fetch'; sections = ['Конспект', 'Пример', 'Тренировка']", "header + nav + main + article + section + footer", "html-semantics"),
+  task("Форма профиля", "html", "junior+", "Сверстай форму профиля с email, именем, городом, чекбоксом подписки и понятными ошибками. Подумай о label, name, autocomplete и required.", "Пользователь не ввёл email и отправил форму", "Форма не отправляется, ошибка связана с email", "html-forms"),
+  task("Адаптивная сетка карточек", "css", "junior", "Сделай сетку карточек тем: на телефоне одна колонка, дальше карточки от 240px, расстояние 12px.", ".topics содержит 12 карточек", "grid-template-columns: repeat(auto-fit, minmax(240px, 1fr))", "css-grid"),
+  task("Липкая боковая навигация", "css", "junior+", "Сделай сайдбар тем липким на десктопе и горизонтальной прокруткой на мобильном.", "Ширина экрана 390px и 1200px", "На телефоне список прокручивается по горизонтали, на десктопе sticky", "css-responsive"),
+  task("Нормализация телефона", "js", "junior", "Напиши normalizePhone(value), которая оставляет только цифры и возвращает строку.", "normalizePhone('+7 (999) 123-45-67')", "'79991234567'", "js-regexp"),
+  task("Группировка по статусу", "js", "junior+", "Напиши groupByStatus(tasks), которая возвращает объект, где ключ - статус, значение - массив задач.", "[{title:'A', status:'todo'}, {title:'B', status:'done'}]", "{ todo: [{...}], done: [{...}] }", "js-objects"),
+  task("Debounce автопоиска", "js", "junior+", "Напиши debounce(fn, delay) и покажи пример, где запрос поиска отправляется только после паузы во вводе.", "search('r'); search('re'); search('react')", "Через delay вызывается только последний запрос", "js-performance"),
+  task("Безопасный рендер комментариев", "js", "junior+", "Есть массив комментариев с пользовательским текстом. Выведи их в DOM безопасно, не используя innerHTML для текста.", "comments = ['<img onerror=alert(1)>', 'Привет']", "Текст отображается как текст, код не выполняется", "js-security"),
+  task("React todo list", "react", "junior", "Собери TodoList: input, добавление, удаление, empty state и стабильные key.", "Пользователь добавляет 'Повторить Grid'", "Задача появляется в списке и удаляется по кнопке", "react-lists-keys"),
+  task("React фильтр товаров", "react", "junior", "Сделай ProductFilter: поле поиска, список товаров, фильтрация без мутации исходного массива.", "products = ['MacBook', 'Mouse', 'Keyboard']; query = 'mo'", "['Mouse']", "react-props-state"),
+  task("React загрузка профиля", "react", "junior+", "Собери компонент ProfileLoader с loading, error, retry и отменой устаревшего запроса при смене id.", "userId меняется с 1 на 2 до завершения первого запроса", "На экране данные пользователя 2, старый ответ игнорируется", "react-data"),
+  task("React custom hook localStorage", "react", "junior+", "Напиши useLocalStorage для сохранения прогресса темы. Хук должен читать стартовое значение и записывать изменения.", "useLocalStorage('progress', {})", "После обновления state значение появляется в localStorage", "react-hooks-rules"),
   task("Класс TrainingSession", "js", "junior", "Создай класс TrainingSession. Конструктор принимает topicId и questionsCount. У экземпляра должны быть методы answer(isCorrect), getScore() и reset().", "const session = new TrainingSession('js-classes', 10); session.answer(true); session.getScore()", "1", "js-classes"),
   task("Приватное состояние квиза", "js", "junior+", "Перепиши TrainingSession так, чтобы score и answers были приватными полями #score и #answers. Снаружи нельзя менять счёт напрямую, только через методы.", "session.#score = 100", "SyntaxError или невозможность доступа снаружи", "js-classes"),
   task("Static factory из localStorage", "js", "junior+", "Добавь static fromStorage(topicId), который читает сохранённый JSON из localStorage и возвращает экземпляр TrainingSession. Если данных нет или JSON битый, возвращай новую сессию.", "TrainingSession.fromStorage('js-classes')", "Экземпляр TrainingSession с восстановленным или пустым состоянием", "js-classes"),
@@ -431,7 +432,7 @@ export const tasks: Task[] = [
   task("Геттеры и сеттеры для ограничений", "js", "junior+", "Создай класс Rating с приватным полем #value. Сеттер value должен принимать только числа от 1 до 5, иначе бросать RangeError. Геттер value возвращает текущее значение.", "const rating = new Rating(); rating.value = 6", "RangeError", "js-classes"),
   task("Instance vs static", "js", "junior", "Создай класс TopicProgress: экземпляр хранит score, а static compare(a, b) сортирует прогресс по score. Проверь, что compare вызывается на классе, а не на экземпляре.", "items.sort(TopicProgress.compare)", "Массив отсортирован по score", "js-classes"),
   task("Mixin для событий", "js", "junior+", "Создай eventMixin с методами on(event, handler), off(event, handler), emit(event, payload). Подмешай его в класс Store через Object.assign(Store.prototype, eventMixin).", "store.on('change', console.log); store.emit('change', { count: 1 })", "Обработчик получает payload", "js-classes"),
-];
+]);
 
 function seed(
   id: string,
@@ -454,8 +455,45 @@ function task(title: string, section: SectionId, level: string, prompt: string, 
   return { title, section, level, prompt, input, output, topicId };
 }
 
+function makeTopicTasks(topic: TopicSeed): Task[] {
+  if (topic.id === "js-functions") {
+    return [
+      task("Функция formatUserLabel", "js", "junior", "Напиши function declaration formatUserLabel(user), которая возвращает строку вида 'Имя · роль'. Добавь значение по умолчанию для роли и ранний return, если user отсутствует.", "formatUserLabel({ name: 'Ann' })", "'Ann · user'", topic.id),
+      task("Function Expression как callback", "js", "junior", "Создай массив чисел и передай в filter function expression, которая оставляет только положительные числа. Затем перепиши тот же callback стрелочной функцией.", "[-2, 0, 3, 7].filter(...)", "[3, 7]", topic.id),
+      task("Замыкание createCounter", "js", "junior+", "Напиши createCounter(start = 0), которая возвращает функцию. Каждый вызов возвращённой функции увеличивает внутренний счётчик на 1 и возвращает новое значение.", "const next = createCounter(10); next(); next();", "11, затем 12", topic.id),
+      task("Потеря this в методе", "js", "junior+", "Есть объект user с методом sayHi(). Покажи, почему const fn = user.sayHi; fn() теряет this, и исправь через bind или обёртку.", "const fn = user.sayHi; fn()", "Исправленный вызов возвращает имя пользователя", topic.id),
+      task("Рефакторинг функции с побочными эффектами", "js", "junior+", "Дана функция, которая одновременно фильтрует пользователей, пишет в DOM и логирует результат. Раздели её на чистую функцию фильтрации и отдельную функцию отображения.", "users -> getActiveUsers(users) -> renderUsers(activeUsers)", "Фильтрация тестируется отдельно от DOM", topic.id),
+      task("Параметры rest и spread", "js", "junior", "Напиши sum(...numbers), а затем вызови её, передав массив через spread.", "sum(...[1, 2, 3, 4])", "10", topic.id),
+    ];
+  }
+
+  if (topic.id === "js-classes") {
+    return [];
+  }
+
+  const sectionTitle = sections[topic.section].title;
+  const concept = topic.focus;
+  const safeExample = topic.code.split("\n").slice(0, 4).join(" ");
+
+  return [
+    task(`${topic.title}: базовая реализация`, topic.section, topic.level, `Напиши небольшой пример по теме «${topic.title}». В коде обязательно покажи: ${concept}. Пример должен быть самодостаточным и запускаться без внешнего API.`, safeExample, `В консоли или на странице видно корректное поведение именно по теме «${topic.title}».`, topic.id),
+    task(`${topic.title}: рабочий сценарий`, topic.section, topic.level, `Смоделируй рабочий сценарий: ${topic.workExample} Реализуй минимальный код, который показывает этот сценарий без лишних абстракций.`, topic.bullets[0], "Код решает описанный рабочий сценарий и не содержит случайной логики из других тем.", topic.id),
+    task(`${topic.title}: исправь ошибку`, topic.section, "junior+", `Сделай пример с типичной ошибкой: «${topic.mistakes[0]}». Затем исправь его и коротко подпиши, почему исправление правильное.`, topic.mistakes.join(" | "), "Есть плохой вариант, исправленный вариант и объяснение причины.", topic.id),
+    task(`${topic.title}: крайний случай`, topic.section, "junior+", `Проверь один крайний случай для темы «${topic.title}»: пустые данные, длинный текст, ошибка ввода, мобильный экран или недоступное состояние. Выбери тот случай, который связан с темой.`, topic.bullets[1] ?? concept, "Код не ломается на выбранном крайнем случае.", topic.id),
+    task(`${topic.title}: мини-шпаргалка в коде`, topic.section, "junior", `Собери короткий пример-комментарий для раздела ${sectionTitle}: 3-5 строк кода и 3 комментария, которые объясняют ключевые правила темы «${topic.title}».`, topic.bullets.slice(0, 3).join(" / "), "Получается фрагмент, который можно вставить в личную шпаргалку.", topic.id),
+    task(`${topic.title}: вопрос собеседования`, topic.section, "junior+", `Подготовь ответ и маленький кодовый пример на вопрос: «Зачем нужна тема ${topic.title} и где она встречается в работе?»`, concept, "Ответ объясняет смысл, ограничение и рабочее применение темы.", topic.id),
+  ];
+}
+
 function enrichTopic(topic: Topic): Topic {
-  if (topic.id !== "js-classes") return topic;
+  if (topic.id !== "js-classes") {
+    return {
+      ...topic,
+      parts: makeLessonParts(topic),
+      cheatsheet: makeCheatsheet(topic),
+      questions: makeTopicQuestions(topic),
+    };
+  }
 
   return {
     ...topic,
@@ -879,6 +917,108 @@ function classQuestions(): Question[] {
     q("Что опасно в глубокой иерархии наследования?", ["Поведение становится трудно проследить и менять", "Код перестаёт быть JavaScript", "Все методы становятся private", "Нельзя использовать constructor", "Нельзя писать tests", "Строки перестают работать"], 0, "Чем глубже дерево, тем сложнее понять источник поведения."),
     q("Что такое mixin в JS-практике?", ["Способ добавить методы, например через Object.assign в prototype", "Обязательная часть любого класса", "Новый тип private поля", "Метод сортировки массива", "Событие DOM", "Форма наследования от двух классов через extends A, B"], 0, "Mixin подмешивает поведение без прямого множественного наследования."),
   ];
+}
+
+function makeLessonParts(topic: Pick<Topic, "title" | "section" | "focus" | "bullets" | "code" | "workExample" | "mistakes">): LessonPart[] {
+  const sectionTitle = sections[topic.section].title;
+  const concepts = splitConcepts(topic.focus);
+
+  return [
+    {
+      title: "1. Суть темы",
+      body: [
+        `Тема «${topic.title}» нужна не как отдельный термин, а как рабочий инструмент раздела ${sectionTitle}. Главная идея: ${topic.focus}. Если ты понимаешь только название, но не можешь выбрать место применения, тема ещё не закреплена.`,
+        `На практике сначала стоит ответить на три вопроса: какую проблему решает эта тема, какие данные или элементы она затрагивает, и что сломается, если использовать её неправильно. Для «${topic.title}» особенно важны эти опорные правила: ${topic.bullets.slice(0, 2).join(" ")}`,
+        "Хороший уровень junior/junior+ - уметь объяснить тему простыми словами, написать минимальный пример руками, назвать типичную ошибку и показать, как проверить результат в браузере или тесте.",
+      ],
+    },
+    {
+      title: "2. Подтемы, которые надо разобрать",
+      body: [
+        `Разбей тему на маленькие куски: ${concepts.join("; ")}. Так проще учить и проще отвечать на собеседовании: не перескакиваешь с общего определения сразу к случайному примеру.`,
+        `Для каждого куска сделай маленький контроль: где это пишется в коде, какой результат ожидается, какое состояние ошибки возможно, как это влияет на пользователя или поддержку проекта.`,
+        "Если какая-то подтема кажется очевидной, всё равно напиши минимальный пример. Часто пробел находится не в определении, а в деталях: порядок выполнения, область видимости, наследование, каскад, фокус, мобильный экран, пустые данные.",
+      ],
+    },
+    {
+      title: "3. Минимальный пример",
+      body: [
+        `Ниже пример, который относится именно к теме «${topic.title}». Его задача - не показать красивую архитектуру, а закрепить синтаксис и поведение. Такой пример полезно переписать руками и изменить пару входных значений.`,
+        "После запуска проверь не только happy path. Попробуй пустое значение, неожиданный тип, длинный текст, disabled-состояние, мобильную ширину или ошибку сети - в зависимости от темы.",
+      ],
+      code: topic.code,
+    },
+    {
+      title: "4. Как это применяется в реальной работе",
+      body: [
+        topic.workExample,
+        `В рабочем коде «${topic.title}» редко живёт в вакууме. Обычно рядом есть состояние загрузки, пользовательский ввод, доступность, стили, тесты, API-ответ или требования дизайна. Поэтому важно понимать не только синтаксис, но и границы применения.`,
+        "Когда берёшь задачу из проекта, формулируй её через пользовательский сценарий: что пользователь делает, что он видит, что происходит при ошибке, и какой код отвечает за это поведение.",
+      ],
+    },
+    {
+      title: "5. Частые ошибки и как себя проверить",
+      body: [
+        `Типичные ошибки: ${topic.mistakes.join(" ")}`,
+        `Самопроверка по теме «${topic.title}»: можешь ли ты объяснить первое правило «${topic.bullets[0]}» на своём примере, можешь ли найти ошибку в чужом коде, можешь ли назвать хотя бы один случай, где этот инструмент использовать не стоит.`,
+        "Если ответ получается слишком общий, значит нужна практика: маленькая задача, затем рефакторинг, затем объяснение вслух. Это лучше, чем просто перечитывать конспект.",
+      ],
+    },
+    {
+      title: "6. Что сказать на собеседовании",
+      body: [
+        `Короткая структура ответа: определение темы «${topic.title}», зачем она нужна, минимальный пример, важное ограничение, рабочий кейс. Такой ответ звучит взрослее, чем список терминов.`,
+        `Для junior+ добавь trade-off: когда решение уместно, когда оно усложняет код, как проверить корректность, какие ошибки чаще всего возникают. Например: ${topic.mistakes[0]}`,
+        "Если просят написать код, начинай с простого рабочего варианта. Потом проговори улучшения: валидация, крайние случаи, доступность, производительность, читаемость, тест.",
+      ],
+    },
+  ];
+}
+
+function makeCheatsheet(topic: Pick<Topic, "title" | "focus" | "bullets" | "mistakes" | "workExample">): string[] {
+  return [
+    `Фокус: ${topic.focus}.`,
+    ...topic.bullets,
+    `Рабочий кейс: ${topic.workExample}`,
+    `Главная ошибка: ${topic.mistakes[0]}`,
+    `Перед собеседованием: объясни «${topic.title}» через пример, ограничение и проверку.`,
+  ].slice(0, 10);
+}
+
+function makeTopicQuestions(topic: Pick<TopicSeed, "title" | "section" | "source" | "focus" | "bullets" | "workExample" | "mistakes">): Question[] {
+  const concepts = splitConcepts(topic.focus);
+  const firstConcept = concepts[0] ?? topic.focus;
+  const secondConcept = concepts[1] ?? topic.bullets[0];
+  const thirdConcept = concepts[2] ?? topic.bullets[1] ?? topic.focus;
+  const firstRule = topic.bullets[0];
+  const secondRule = topic.bullets[1] ?? topic.focus;
+  const thirdRule = topic.bullets[2] ?? topic.focus;
+  const fourthRule = topic.bullets[3] ?? topic.focus;
+  const firstMistake = topic.mistakes[0];
+  const secondMistake = topic.mistakes[1] ?? "Использовать тему без проверки крайних случаев.";
+
+  return [
+    q(`Что является центральной идеей темы «${topic.title}»?`, [topic.focus, "Работа со случайной обрезкой строк", "Любая задача из соседнего раздела", "Только настройка редактора", "Замена всего кода одной библиотекой", "Удаление пользовательских состояний"], 0, `Центр темы: ${topic.focus}.`),
+    q(`Какая подтема напрямую относится к «${topic.title}»?`, [firstConcept, "Обрезка номера телефона", "Случайная сортировка CSS-файлов", "Настройка базы данных", "Создание серверного cron", "Смена названия проекта"], 0, `${firstConcept} входит в фокус этой темы.`),
+    q(`Какое правило по теме «${topic.title}» верное?`, [firstRule, firstMistake, "Эта тема не влияет на рабочий код", "Её нельзя проверить примером", "Её всегда надо решать через backend", "Она нужна только для названия раздела"], 0, firstRule),
+    q(`Какой второй важный ориентир связан с темой «${topic.title}»?`, [secondRule, "Всегда игнорировать ошибки", "Не думать о пользователе", "Не запускать пример", "Скрывать результат в console.log без задачи", "Использовать unrelated helper"], 0, secondRule),
+    q(`Что больше похоже на реальное применение темы «${topic.title}»?`, [topic.workExample, "Задача из другого раздела без связи с текущей темой", "Переименование переменной без поведения", "Удаление всех проверок", "Хранение пароля в разметке", "Переписывание проекта без причины"], 0, topic.workExample),
+    q("Какой вариант больше похож на типичную ошибку?", [firstMistake, secondRule, thirdRule, fourthRule, "Написать минимальный пример", "Проверить крайний случай"], 0, firstMistake),
+    q("Что стоит сделать после чтения конспекта?", [`Написать пример с ${firstConcept} и проверить ошибочный сценарий`, "Перейти к случайной задаче из другого раздела", "Считать тему закрытой по названию", "Удалить все комментарии", "Не смотреть результат", "Сразу учить следующую тему без практики"], 0, "Практика должна проверять именно текущий фокус темы."),
+    q(`Какой вопрос уместен на собеседовании по теме «${topic.title}»?`, [`Когда использовать ${firstConcept}, а когда выбрать более простой подход?`, "Как обрезать строку, если тема не про строки?", "Как настроить CI без проекта?", "Как удалить HTML?", "Как выключить браузер?", "Как не объяснять trade-off?"], 0, "Junior+ ответ должен включать ограничения и выбор инструмента."),
+    q(`Как проверить, что задача по «${topic.title}» действительно относится к теме?`, [`В условии и решении явно используются ${firstConcept} или ${secondConcept}`, "В ней есть любое слово из JavaScript", "Она решает совсем другую проблему", "Она не запускается", "Она требует неизвестный backend", "Она копирует случайный код"], 0, "Задача должна тренировать конкретную тему, а не соседний навык."),
+    q(`Что поможет углубить тему «${topic.title}»?`, [topic.source, "Случайная задача без связи с темой", "Только название темы", "Минифицированный bundle", "Пустой README", "Непроверенный совет без примеров"], 0, "Источник указан как ориентир для углубления."),
+    q(`Какой элемент ответа покажет уровень junior+ по теме «${topic.title}»?`, [`Пример, ограничение, рабочий кейс и частая ошибка: ${secondMistake}`, "Только одно слово из заголовка", "Отказ писать код", "Переход на другую тему", "Список библиотек без смысла", "Непроверенный ответ"], 0, "Junior+ показывает понимание последствий решения."),
+    q(`Какой дополнительный кусок стоит разобрать в «${topic.title}»?`, [thirdConcept, "Случайный дизайн hero-блока", "Оплата Stripe", "Администрирование DNS", "Генерация картинок", "Архивация проекта"], 0, `${thirdConcept} связан с фокусом темы.`),
+  ];
+}
+
+function splitConcepts(focus: string): string[] {
+  return focus
+    .split(/,| и |\/|;/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .slice(0, 8);
 }
 
 function makeSummary(topic: TopicSeed) {
