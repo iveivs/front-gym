@@ -30,11 +30,12 @@ export default function Home() {
     () => topics.filter((topic) => section === "all" || topic.section === section),
     [section],
   );
-  const visibleTasks = useMemo(
-    () => tasks.filter((task) => section === "all" || task.section === section),
-    [section],
-  );
   const currentTopic = topics.find((topic) => topic.id === topicId) ?? topics[0];
+  const visibleTasks = useMemo(() => {
+    const topicTasks = tasks.filter((task) => task.topicId === currentTopic.id);
+    if (topicTasks.length > 0) return topicTasks;
+    return tasks.filter((task) => !task.topicId && (section === "all" || task.section === section));
+  }, [currentTopic.id, section]);
   const currentQuestion = currentTopic.questions[questionIndex];
   const isFinished = questionIndex >= currentTopic.questions.length;
   const bestScore = progress[currentTopic.id] ?? 0;
@@ -175,6 +176,36 @@ export default function Home() {
                 </ul>
               </section>
 
+              {currentTopic.parts && (
+                <section className="partList">
+                  <h3>Подтемы</h3>
+                  {currentTopic.parts.map((part) => (
+                    <article key={part.title} className="lessonPart">
+                      <h4>{part.title}</h4>
+                      {part.body.map((paragraph) => (
+                        <p key={paragraph}>{paragraph}</p>
+                      ))}
+                      {part.code && (
+                        <pre>
+                          <code>{part.code}</code>
+                        </pre>
+                      )}
+                    </article>
+                  ))}
+                </section>
+              )}
+
+              {currentTopic.cheatsheet && (
+                <section className="cheatsheet">
+                  <h3>Шпаргалка</h3>
+                  <ul>
+                    {currentTopic.cheatsheet.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+
               <section className="lessonBlock">
                 <h3>Мини-пример</h3>
                 <pre>
@@ -276,7 +307,11 @@ export default function Home() {
             <section className="tasks">
               <div>
                 <h2>Задачи для IDE</h2>
-                <p>Копируй условие одной кнопкой, решай у себя и проверяй по примеру вывода.</p>
+                <p>
+                  {visibleTasks.some((task) => task.topicId === currentTopic.id)
+                    ? `Задачи подобраны именно под тему «${currentTopic.title}».`
+                    : "Копируй условие одной кнопкой, решай у себя и проверяй по примеру вывода."}
+                </p>
               </div>
               <div className="taskGrid">
                 {visibleTasks.map((task) => (

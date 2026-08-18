@@ -7,6 +7,12 @@ export type Question = {
   explain: string;
 };
 
+export type LessonPart = {
+  title: string;
+  body: string[];
+  code?: string;
+};
+
 export type Topic = {
   id: string;
   section: SectionId;
@@ -20,6 +26,8 @@ export type Topic = {
   code: string;
   workExample: string;
   mistakes: string[];
+  parts?: LessonPart[];
+  cheatsheet?: string[];
   questions: Question[];
 };
 
@@ -27,6 +35,7 @@ export type Task = {
   title: string;
   section: SectionId;
   level: string;
+  topicId?: string;
   prompt: string;
   input: string;
   output: string;
@@ -395,7 +404,7 @@ const [error, setError] = useState(null);`, "Профиль, список зак
 // новая задача появляется в списке`, "Формы, фильтры, модальные окна и критичные пользовательские сценарии стоит покрывать тестами.", ["Проверять внутренний state вместо результата на экране.", "Мокать всё подряд.", "Писать тесты только на snapshot."]),
 ];
 
-export const topics: Topic[] = seeds.map((item) => ({
+export const topics: Topic[] = seeds.map((item) => enrichTopic({
   ...item,
   summary: makeSummary(item),
   questions: makeQuestions(item),
@@ -414,6 +423,14 @@ export const tasks: Task[] = [
   task("React фильтр товаров", "react", "junior", "Сделай ProductFilter: поле поиска, список товаров, фильтрация без мутации исходного массива.", "products = ['MacBook', 'Mouse', 'Keyboard']; query = 'mo'", "['Mouse']"),
   task("React загрузка профиля", "react", "junior+", "Собери компонент ProfileLoader с loading, error, retry и отменой устаревшего запроса при смене id.", "userId меняется с 1 на 2 до завершения первого запроса", "На экране данные пользователя 2, старый ответ игнорируется"),
   task("React custom hook localStorage", "react", "junior+", "Напиши useLocalStorage для сохранения прогресса темы. Хук должен читать стартовое значение и записывать изменения.", "useLocalStorage('progress', {})", "После обновления state значение появляется в localStorage"),
+  task("Класс TrainingSession", "js", "junior", "Создай класс TrainingSession. Конструктор принимает topicId и questionsCount. У экземпляра должны быть методы answer(isCorrect), getScore() и reset().", "const session = new TrainingSession('js-classes', 10); session.answer(true); session.getScore()", "1", "js-classes"),
+  task("Приватное состояние квиза", "js", "junior+", "Перепиши TrainingSession так, чтобы score и answers были приватными полями #score и #answers. Снаружи нельзя менять счёт напрямую, только через методы.", "session.#score = 100", "SyntaxError или невозможность доступа снаружи", "js-classes"),
+  task("Static factory из localStorage", "js", "junior+", "Добавь static fromStorage(topicId), который читает сохранённый JSON из localStorage и возвращает экземпляр TrainingSession. Если данных нет или JSON битый, возвращай новую сессию.", "TrainingSession.fromStorage('js-classes')", "Экземпляр TrainingSession с восстановленным или пустым состоянием", "js-classes"),
+  task("Наследование ошибки API", "js", "junior+", "Создай класс HttpError extends Error с полями status и details. Затем создай ValidationError extends HttpError для ошибок 422.", "throw new ValidationError('Bad form', { email: 'required' })", "error instanceof ValidationError и error instanceof HttpError дают true", "js-classes"),
+  task("Переопределение метода через super", "js", "junior+", "Есть BaseStorage с методом save(key, value). Создай JsonStorage extends BaseStorage, который переопределяет save и перед вызовом super.save сериализует value в JSON.", "storage.save('progress', { score: 8 })", "В базовое хранилище попадает строка JSON", "js-classes"),
+  task("Геттеры и сеттеры для ограничений", "js", "junior+", "Создай класс Rating с приватным полем #value. Сеттер value должен принимать только числа от 1 до 5, иначе бросать RangeError. Геттер value возвращает текущее значение.", "const rating = new Rating(); rating.value = 6", "RangeError", "js-classes"),
+  task("Instance vs static", "js", "junior", "Создай класс TopicProgress: экземпляр хранит score, а static compare(a, b) сортирует прогресс по score. Проверь, что compare вызывается на классе, а не на экземпляре.", "items.sort(TopicProgress.compare)", "Массив отсортирован по score", "js-classes"),
+  task("Mixin для событий", "js", "junior+", "Создай eventMixin с методами on(event, handler), off(event, handler), emit(event, payload). Подмешай его в класс Store через Object.assign(Store.prototype, eventMixin).", "store.on('change', console.log); store.emit('change', { count: 1 })", "Обработчик получает payload", "js-classes"),
 ];
 
 function seed(
@@ -433,8 +450,435 @@ function seed(
   return { id, section, title, tag, level, time, source, focus, bullets, code, workExample, mistakes };
 }
 
-function task(title: string, section: SectionId, level: string, prompt: string, input: string, output: string): Task {
-  return { title, section, level, prompt, input, output };
+function task(title: string, section: SectionId, level: string, prompt: string, input: string, output: string, topicId?: string): Task {
+  return { title, section, level, prompt, input, output, topicId };
+}
+
+function enrichTopic(topic: Topic): Topic {
+  if (topic.id !== "js-classes") return topic;
+
+  return {
+    ...topic,
+    title: "Классы, наследование и ООП в JavaScript",
+    tag: "глубокая глава",
+    time: "55 мин",
+    source: "https://learn.javascript.ru/classes",
+    summary:
+      "Классы в JavaScript - это современный синтаксис для создания однотипных объектов с общим поведением. Они не отменяют прототипы: методы класса попадают в prototype, экземпляры ищут методы по цепочке прототипов, а наследование через extends настраивает связи между prototype и самими конструкторами. Тему нужно знать не ради академического ООП, а чтобы уверенно читать SDK, писать собственные ошибки, моделировать доменные сущности, понимать this, super, static, private fields и отличать хороший класс от лишней обёртки.",
+    bullets: [
+      "class создаёт функцию-конструктор, а методы кладёт в ClassName.prototype; экземпляр получает к ним доступ через цепочку прототипов.",
+      "constructor запускается при new и задаёт начальное состояние конкретного экземпляра; методы описывают поведение, общее для всех экземпляров.",
+      "Код внутри class работает в strict mode, класс нельзя вызвать без new, а методы класса неперечислимые.",
+      "extends создаёт наследование, а в конструкторе наследника super() обязателен до первого обращения к this.",
+      "static методы и поля принадлежат самому классу, а не экземплярам: это удобно для фабрик, сравнения, валидации и служебных операций.",
+      "Приватные элементы с # реально закрыты языком; условный protected через _ - только договорённость команды.",
+      "Классы уместны для сущностей с состоянием и поведением, пользовательских ошибок, клиентов API, парсеров, адаптеров и SDK.",
+      "В UI на React классы чаще встречаются не в компонентах, а рядом: в моделях, сервисах, ошибках, кешах, утилитах и интеграциях.",
+    ],
+    code: `class TrainingSession {
+  #score = 0;
+  #answers = [];
+
+  constructor(topicId, questionsCount) {
+    this.topicId = topicId;
+    this.questionsCount = questionsCount;
+  }
+
+  answer(isCorrect) {
+    this.#answers.push(Boolean(isCorrect));
+    if (isCorrect) this.#score += 1;
+  }
+
+  get score() {
+    return this.#score;
+  }
+
+  get progress() {
+    return this.#answers.length / this.questionsCount;
+  }
+
+  reset() {
+    this.#score = 0;
+    this.#answers = [];
+  }
+
+  toJSON() {
+    return {
+      topicId: this.topicId,
+      questionsCount: this.questionsCount,
+      score: this.#score,
+      answers: [...this.#answers],
+    };
+  }
+
+  static fromJSON(data) {
+    const session = new TrainingSession(data.topicId, data.questionsCount);
+    for (const answer of data.answers ?? []) session.answer(answer);
+    return session;
+  }
+}`,
+    workExample:
+      "В рабочем фронтенде класс может быть удобен для TrainingSession, ApiClient, HttpError, Money, DateRange, FeatureFlagStore, AnalyticsQueue или любого объекта, где данные и правила должны жить рядом. Например, компонент React может просто вызвать session.answer(true), не зная, как именно считается прогресс и как он сериализуется.",
+    mistakes: [
+      "Делать класс только потому, что «так взрослее», хотя достаточно функции или обычного объекта.",
+      "Мутировать приватное состояние в обход публичных методов или раскрывать наружу слишком много внутренних деталей.",
+      "Забывать super() в конструкторе наследника до обращения к this.",
+      "Путать методы экземпляра и static методы: session.fromJSON() не сработает, если fromJSON объявлен static.",
+      "Передавать метод как callback и терять this.",
+      "Строить глубокую иерархию наследования там, где проще композиция.",
+      "Наследоваться от встроенных классов без понимания instanceof, name, message и stack.",
+    ],
+    cheatsheet: [
+      "new Class(args) создаёт экземпляр и вызывает constructor.",
+      "ClassName.prototype хранит обычные методы экземпляров.",
+      "field = value создаётся на каждом экземпляре, а не в prototype.",
+      "static method() вызывается как ClassName.method(), а не instance.method().",
+      "#private доступен только внутри тела класса, даже наследник не может обратиться к private полю родителя.",
+      "В extends-конструкторе сначала super(...args), потом this.",
+      "super.method() вызывает метод родителя, сохраняя текущий this.",
+      "instanceof проверяет, встречается ли prototype конструктора в цепочке прототипов объекта.",
+      "Геттер выглядит как свойство при чтении, сеттер - как свойство при записи, но внутри может быть логика.",
+      "Если метод будет передаваться как callback, заранее подумай о this: bind, arrow field или обёртка.",
+    ],
+    parts: classLessonParts(),
+    questions: classQuestions(),
+  };
+}
+
+function classLessonParts(): LessonPart[] {
+  return [
+    {
+      title: "1. Когда классы вообще нужны",
+      body: [
+        "Класс стоит рассматривать, когда в приложении есть понятная сущность: у неё есть состояние, правила изменения этого состояния и операции, которые естественно принадлежат самой сущности. Например: сессия тренировки знает выбранную тему, количество вопросов, ответы и умеет посчитать результат. Если оставить эти знания раскиданными по компонентам и функциям, код быстро становится хрупким.",
+        "Класс не обязан быть «большой архитектурой». Это просто способ собрать данные и поведение рядом. В то же время класс не нужен для любой мелкой операции. formatPrice(value), normalizePhone(input), isValidEmail(value) обычно лучше оставить функциями: они не хранят состояние и не создают экземпляры.",
+        "На собеседовании хороший ответ звучит так: классы полезны для моделирования однотипных объектов и инкапсуляции правил, но в JavaScript они построены поверх прототипов, поэтому важно понимать не только синтаксис class, но и prototype chain.",
+      ],
+      code: `// Хороший кандидат на класс: состояние + правила + поведение.
+class Cart {
+  items = [];
+
+  add(product, count = 1) {
+    if (count <= 0) throw new RangeError("count must be positive");
+    this.items.push({ product, count });
+  }
+
+  get total() {
+    return this.items.reduce((sum, item) => sum + item.product.price * item.count, 0);
+  }
+}
+
+// Лучше как функция: нет собственного состояния.
+function formatPrice(value) {
+  return new Intl.NumberFormat("ru-RU").format(value);
+}`,
+    },
+    {
+      title: "2. Базовый синтаксис: constructor, поля и методы",
+      body: [
+        "constructor - специальный метод, который запускается при создании экземпляра через new. В нём обычно проверяют входные данные и записывают начальное состояние. Методы класса записываются без function и без запятых между ними.",
+        "Поля класса вроде status = 'idle' создаются на каждом экземпляре. Методы вроде start() находятся в prototype и переиспользуются всеми экземплярами. Это важное отличие: если создать метод как стрелочное поле handleClick = () => {}, такая функция будет новой для каждого экземпляра. Иногда это нужно для сохранения this, но это дороже по памяти.",
+        "Класс нельзя вызвать как обычную функцию. Если написать TrainingSession(), будет ошибка: конструктор класса требует new. Внутри class автоматически действует строгий режим, поэтому многие ошибки с this проявляются явно.",
+      ],
+      code: `class TrainingSession {
+  status = "idle";
+
+  constructor(topicId, questionsCount) {
+    if (!topicId) throw new Error("topicId is required");
+    if (questionsCount <= 0) throw new RangeError("questionsCount must be positive");
+
+    this.topicId = topicId;
+    this.questionsCount = questionsCount;
+  }
+
+  start() {
+    this.status = "active";
+  }
+}
+
+const session = new TrainingSession("js-classes", 10);
+session.start();
+console.log(session.status); // "active"`,
+    },
+    {
+      title: "3. Что class делает под капотом",
+      body: [
+        "В JavaScript class технически создаёт функцию. Метод constructor становится телом этой функции-конструктора, а методы класса сохраняются в ClassName.prototype. Когда ты вызываешь session.start(), движок сначала ищет start на самом объекте session, затем идёт в TrainingSession.prototype.",
+        "Это объясняет, почему методы доступны всем экземплярам, но не лежат в каждом экземпляре отдельно. Это также объясняет instanceof: проверяется не название класса, а наличие prototype конструктора в цепочке прототипов объекта.",
+        "Методы класса неперечислимые. Это удобно: при переборе полей объекта ты видишь данные экземпляра, а не весь набор методов из prototype.",
+      ],
+      code: `class User {
+  constructor(name) {
+    this.name = name;
+  }
+
+  sayHi() {
+    return "Привет, " + this.name;
+  }
+}
+
+const user = new User("Иван");
+
+console.log(typeof User); // "function"
+console.log(User === User.prototype.constructor); // true
+console.log(Object.getOwnPropertyNames(User.prototype)); // ["constructor", "sayHi"]
+console.log(user instanceof User); // true`,
+    },
+    {
+      title: "4. this: почему метод иногда ломается",
+      body: [
+        "this в JavaScript зависит от способа вызова. Когда ты пишешь session.start(), this внутри start указывает на session, потому что слева от точки стоит session. Но если передать const start = session.start; start(); связь с объектом потеряется.",
+        "В рабочих проектах это всплывает в обработчиках событий, таймерах, колбэках и старом классовом React. Решения: вызвать через обёртку, привязать bind, использовать стрелочное поле, либо проектировать метод так, чтобы он не зависел от this.",
+        "На интервью часто проверяют именно этот момент: класс сам по себе не «фиксирует» this для методов prototype.",
+      ],
+      code: `class Timer {
+  seconds = 0;
+
+  tick() {
+    this.seconds += 1;
+  }
+}
+
+const timer = new Timer();
+setInterval(() => timer.tick(), 1000); // this не теряется
+
+// Альтернатива:
+const safeTick = timer.tick.bind(timer);`,
+    },
+    {
+      title: "5. Геттеры и сеттеры: свойство с логикой",
+      body: [
+        "Геттер читается как обычное свойство, но внутри запускает функцию. Сеттер выглядит как присваивание, но может валидировать значение. Это удобно, когда внешний интерфейс должен быть простым, а внутреннее состояние нужно защищать от невалидных значений.",
+        "Важно не превращать getter в дорогую операцию с побочными эффектами. Когда разработчик пишет user.fullName, он ожидает чтение значения, а не сетевой запрос или изменение состояния.",
+        "Сеттер без понятной ошибки - плохой UX для разработчика. Если значение не подходит, бросай конкретную ошибку или явно игнорируй с документированным поведением.",
+      ],
+      code: `class Rating {
+  #value = 1;
+
+  get value() {
+    return this.#value;
+  }
+
+  set value(nextValue) {
+    if (!Number.isInteger(nextValue) || nextValue < 1 || nextValue > 5) {
+      throw new RangeError("rating must be an integer from 1 to 5");
+    }
+    this.#value = nextValue;
+  }
+}
+
+const rating = new Rating();
+rating.value = 5;
+console.log(rating.value); // 5`,
+    },
+    {
+      title: "6. static: методы и данные уровня класса",
+      body: [
+        "static принадлежит не экземпляру, а самому классу. Это уместно для операций, которые логически относятся к типу сущности целиком: создать экземпляр из JSON, сравнить два экземпляра, проверить входные данные, вернуть дефолтную конфигурацию.",
+        "Типичная рабочая форма - static factory. Конструктор оставляют для уже нормализованных данных, а static метод умеет собрать объект из localStorage, URLSearchParams или ответа API.",
+        "Статические методы наследуются через связь между самими конструкторами. Но не стоит злоупотреблять этим: если static метод использует private static поле родителя через this, наследник может получить неожиданную ошибку. Для приватной static-логики часто безопаснее обращаться к имени класса.",
+      ],
+      code: `class TopicProgress {
+  constructor(topicId, score, total) {
+    this.topicId = topicId;
+    this.score = score;
+    this.total = total;
+  }
+
+  get percent() {
+    return Math.round((this.score / this.total) * 100);
+  }
+
+  static compareByScore(a, b) {
+    return b.score - a.score;
+  }
+
+  static fromStorage(topicId) {
+    try {
+      const raw = localStorage.getItem("progress:" + topicId);
+      if (!raw) return new TopicProgress(topicId, 0, 10);
+      const data = JSON.parse(raw);
+      return new TopicProgress(topicId, data.score, data.total);
+    } catch {
+      return new TopicProgress(topicId, 0, 10);
+    }
+  }
+}
+
+const progress = TopicProgress.fromStorage("js-classes");
+console.log(progress.percent);`,
+    },
+    {
+      title: "7. Приватные поля # и условно защищённые _",
+      body: [
+        "Синтаксис #field делает поле приватным на уровне языка. К нему нельзя обратиться снаружи класса, нельзя прочитать через квадратные скобки, нельзя случайно перезаписать как обычное свойство. Это сильная инкапсуляция.",
+        "Приватные поля должны быть объявлены в теле класса заранее. Нельзя внезапно создать this.#value в методе, если #value не объявлен. Это помогает движку и человеку видеть внутреннюю структуру класса.",
+        "В JavaScript нет настоящего protected как в некоторых других языках. Префикс _value - договорённость: команда обещает не трогать поле снаружи, но язык не мешает. Наследник тоже не имеет доступа к #private полям родителя, поэтому если наследникам нужен контролируемый доступ, обычно делают protected-подобный публичный/полупубличный метод или геттер.",
+      ],
+      code: `class TokenStore {
+  #token = null;
+
+  setToken(token) {
+    if (typeof token !== "string" || token.length < 10) {
+      throw new Error("Invalid token");
+    }
+    this.#token = token;
+  }
+
+  hasToken() {
+    return this.#token !== null;
+  }
+}
+
+const store = new TokenStore();
+store.setToken("1234567890");
+console.log(store.hasToken()); // true
+// console.log(store.#token); // SyntaxError`,
+    },
+    {
+      title: "8. Наследование, extends и super",
+      body: [
+        "extends говорит: новый класс расширяет поведение базового класса. Экземпляр наследника получает методы родителя через цепочку прототипов. При этом наследник может добавить свои поля и методы или переопределить родительские.",
+        "В конструкторе наследника обязательно вызвать super() до обращения к this. До super родительская часть объекта ещё не инициализирована, поэтому this недоступен.",
+        "super.method() вызывает метод родителя, но this остаётся текущим экземпляром. Это удобно, когда нужно расширить поведение, а не полностью переписать его.",
+      ],
+      code: `class StorageAdapter {
+  save(key, value) {
+    localStorage.setItem(key, value);
+  }
+
+  read(key) {
+    return localStorage.getItem(key);
+  }
+}
+
+class JsonStorageAdapter extends StorageAdapter {
+  save(key, value) {
+    super.save(key, JSON.stringify(value));
+  }
+
+  read(key) {
+    const raw = super.read(key);
+    return raw ? JSON.parse(raw) : null;
+  }
+}
+
+const storage = new JsonStorageAdapter();
+storage.save("settings", { theme: "dark" });`,
+    },
+    {
+      title: "9. Собственные ошибки через extends Error",
+      body: [
+        "Один из самых практичных кейсов классов во фронтенде - собственные типы ошибок. Они помогают различать сетевую ошибку, ошибку валидации, истёкшую авторизацию и неизвестную проблему.",
+        "Класс ошибки обычно наследуется от Error, вызывает super(message), задаёт name и добавляет полезные поля: status, details, code, response. После этого catch может проверять error instanceof ValidationError и показывать правильный UI.",
+        "Это лучше, чем бросать обычные строки или безымянные объекты: у Error есть message, stack, нормальная интеграция с инструментами отладки и мониторинга.",
+      ],
+      code: `class HttpError extends Error {
+  constructor(message, status, details = null) {
+    super(message);
+    this.name = "HttpError";
+    this.status = status;
+    this.details = details;
+  }
+}
+
+class ValidationError extends HttpError {
+  constructor(details) {
+    super("Validation failed", 422, details);
+    this.name = "ValidationError";
+  }
+}
+
+try {
+  throw new ValidationError({ email: "Email is required" });
+} catch (error) {
+  if (error instanceof ValidationError) {
+    console.log(error.details.email);
+  }
+}`,
+    },
+    {
+      title: "10. Наследование встроенных классов и instanceof",
+      body: [
+        "Можно наследоваться от встроенных классов: Error, Array, Map и других. Самый полезный и частый вариант во фронтенде - Error. Наследование Array или Map встречается реже и часто создаёт больше вопросов, чем пользы.",
+        "instanceof проверяет прототипную цепочку. Это хорошо для объектов, созданных в одном JavaScript realm. Но в iframe, разных окнах или при смешивании сборок могут быть нюансы. Для plain object часто лучше проверять форму данных, а не constructor.",
+        "Если класс нужен только чтобы сгруппировать набор функций, возможно, лучше использовать модуль с named exports. Класс хорош, когда есть экземпляры и состояние.",
+      ],
+      code: `const error = new ValidationError({ email: "required" });
+
+console.log(error instanceof ValidationError); // true
+console.log(error instanceof HttpError); // true
+console.log(error instanceof Error); // true`,
+    },
+    {
+      title: "11. Mixins и композиция",
+      body: [
+        "JavaScript-класс может наследоваться только от одного класса. Когда хочется добавить поведение из нескольких источников, используют композицию или mixin. Mixin обычно копирует методы в prototype через Object.assign.",
+        "Mixin стоит использовать осторожно: он может сделать источник метода неочевидным. В больших проектах часто понятнее композиция: объект получает зависимость через constructor и вызывает её методы.",
+        "На junior+ уровне важно сказать: наследование описывает отношение «является разновидностью», композиция - «использует внутри». Если UserRepository использует ApiClient, это не значит, что UserRepository extends ApiClient.",
+      ],
+      code: `const eventMixin = {
+  on(event, handler) {
+    this.handlers ??= {};
+    (this.handlers[event] ??= new Set()).add(handler);
+  },
+  off(event, handler) {
+    this.handlers?.[event]?.delete(handler);
+  },
+  emit(event, payload) {
+    this.handlers?.[event]?.forEach((handler) => handler(payload));
+  },
+};
+
+class Store {
+  state = {};
+}
+
+Object.assign(Store.prototype, eventMixin);
+
+const store = new Store();
+store.on("change", console.log);
+store.emit("change", { count: 1 });`,
+    },
+    {
+      title: "12. Как отвечать на собеседовании",
+      body: [
+        "Начинай с сути: class - синтаксис для объявления конструктора и методов prototype. Затем добавь отличия от function constructor: нельзя вызвать без new, методы неперечислимые, strict mode внутри класса, удобный синтаксис fields/static/private/extends.",
+        "Дальше покажи практику: классы помогают моделировать сущности и ошибки, но не заменяют функции. В React-приложении классовые компоненты сейчас редко нужны, но классы вне UI всё ещё встречаются в сервисах, SDK и Error-классах.",
+        "Если спрашивают про наследование, обязательно скажи про super() до this, переопределение методов, static inheritance и то, что #private поля родителя недоступны наследнику. Это сразу звучит как человек, который не просто видел слово class, а понимает реальные ловушки.",
+      ],
+      code: `// Короткая формула:
+// class = constructor function + prototype methods + строгие правила синтаксиса.
+// Экземпляр = объект, созданный через new.
+// Наследование = связь prototype наследника с prototype родителя.
+// Инкапсуляция = наружу даём методы, внутрь прячем детали.`,
+    },
+  ];
+}
+
+function classQuestions(): Question[] {
+  return [
+    q("Что технически создаёт объявление class в JavaScript?", ["Функцию-конструктор и методы в её prototype", "Новый примитивный тип данных", "HTML-шаблон", "Отдельный поток выполнения", "JSON-схему", "CSS-класс"], 0, "Класс в JS связан с функцией-конструктором и прототипами."),
+    q("Что происходит при new User('Ann')?", ["Создаётся объект, вызывается constructor, this указывает на новый объект", "Вызывается статический метод render", "Создаётся только prototype без объекта", "Класс преобразуется в JSON", "Методы копируются в window", "Запускается fetch"], 0, "new создаёт экземпляр и запускает constructor с this нового объекта."),
+    q("Где обычно находятся методы, объявленные как method() {} внутри класса?", ["В ClassName.prototype", "В localStorage", "В каждом экземпляре как отдельная копия всегда", "В document.body", "В массиве arguments", "В CSSOM"], 0, "Обычные методы класса хранятся в prototype и переиспользуются экземплярами."),
+    q("Какое утверждение про поля класса верное?", ["field = value создаётся на каждом экземпляре", "field = value попадает в prototype как метод", "field = value всегда static", "Поле нельзя читать из методов", "Поле создаёт DOM-атрибут", "Поле работает только в React"], 0, "Поля класса становятся собственными свойствами экземпляра."),
+    q("Почему class User {} нельзя вызвать как User()?", ["Класс-конструктор должен вызываться через new", "У класса нет имени", "User() всегда возвращает null", "Нужно сначала импортировать React", "Методы класса enumerable", "Потому что User - CSS-селектор"], 0, "Class constructor нельзя вызвать без new."),
+    q("Что обязательно сделать в constructor наследника перед обращением к this?", ["Вызвать super()", "Вызвать JSON.parse", "Назначить static поле", "Добавить запятую после метода", "Вызвать document.createElement", "Удалить prototype"], 0, "В derived class this доступен только после super()."),
+    q("Что делает super.method() в методе наследника?", ["Вызывает метод родителя с текущим this", "Создаёт новый родительский объект всегда", "Удаляет метод наследника", "Превращает метод в static", "Вызывает метод без this", "Отключает strict mode"], 0, "super помогает расширить поведение родителя, сохраняя текущий экземпляр."),
+    q("Чем static method отличается от обычного метода экземпляра?", ["Вызывается на классе, а не на экземпляре", "Всегда приватный", "Автоматически запускается при каждом render", "Не может возвращать значение", "Доступен только через this в constructor", "Хранится в массиве экземпляра"], 0, "static относится к конструктору класса целиком."),
+    q("Для чего хорошо подходит static factory method?", ["Создать экземпляр из JSON, localStorage или другого формата", "Заменить любую функцию в проекте", "Скрыть все ошибки", "Отрисовать CSS-анимацию", "Привязать label к input", "Сделать поле приватным без #"], 0, "Фабричный static метод подготавливает данные и возвращает экземпляр."),
+    q("Что означает #score в классе?", ["Приватное поле, доступное только внутри тела класса", "ID элемента DOM", "Комментарий", "Обычное публичное свойство со строковым ключом", "Статический метод", "CSS-переменная"], 0, "#private элементы закрыты на уровне языка."),
+    q("Может ли наследник обратиться к #private полю родителя напрямую?", ["Нет, private поле доступно только классу, который его объявил", "Да, через super.#field", "Да, если поставить _ перед именем", "Да, через Object.keys", "Да, через JSON.stringify", "Да, если поле static"], 0, "Private элементы scoped к телу класса, а не ко всей иерархии."),
+    q("Что такое protected через _name в JavaScript?", ["Договорённость команды, а не защита языка", "Настоящее приватное поле", "Поле только для static методов", "Синтаксис TypeScript runtime", "Запрет на чтение в DevTools", "Автоматическая валидация"], 0, "Подчёркивание сигнализирует намерение, но JS не блокирует доступ."),
+    q("Почему метод класса может потерять this при передаче как callback?", ["this зависит от способа вызова, а не от места объявления", "class всегда удаляет this", "prototype запрещает callback", "static методы меняют this всех методов", "Потому что callback не может быть функцией", "Из-за CSS cascade"], 0, "Если метод вызван без объекта слева от точки, this может стать undefined."),
+    q("Какой вариант корректно сохраняет this при передаче метода?", ["setInterval(() => timer.tick(), 1000)", "setInterval(timer.tick, 1000) всегда безопасно", "timer.tick.call(null)", "delete timer.tick", "JSON.stringify(timer.tick)", "class tick(timer)"], 0, "Обёртка вызывает метод через объект timer."),
+    q("Что проверяет instanceof?", ["Есть ли prototype конструктора в цепочке прототипов объекта", "Совпадает ли имя переменной с именем класса", "Есть ли поле id", "Является ли объект JSON", "Наследуется ли CSS-класс", "Есть ли static method compare"], 0, "instanceof основан на прототипной цепочке."),
+    q("Когда класс уместнее обычной функции?", ["Когда есть однотипные экземпляры со своим состоянием и поведением", "Когда нужно сложить два числа", "Когда нужно обрезать строку", "Когда нет состояния", "Когда функция уже понятна", "Когда нужен только CSS"], 0, "Класс оправдан, если он моделирует сущность и её правила."),
+    q("Что лучше для parsePhone(value)?", ["Обычная функция", "Класс с пятью уровнями наследования", "Наследник Array", "Private static constructor", "Mixin через Object.assign", "HTMLElement"], 0, "Чистое преобразование без состояния проще выразить функцией."),
+    q("Зачем наследоваться от Error?", ["Чтобы различать типы ошибок через instanceof и хранить дополнительные поля", "Чтобы ошибка стала CSS-классом", "Чтобы fetch перестал падать", "Чтобы JSON сам валидировался", "Чтобы не писать catch", "Чтобы скрыть stack trace от разработчика"], 0, "Собственные Error-классы помогают обработке и диагностике."),
+    q("Что опасно в глубокой иерархии наследования?", ["Поведение становится трудно проследить и менять", "Код перестаёт быть JavaScript", "Все методы становятся private", "Нельзя использовать constructor", "Нельзя писать tests", "Строки перестают работать"], 0, "Чем глубже дерево, тем сложнее понять источник поведения."),
+    q("Что такое mixin в JS-практике?", ["Способ добавить методы, например через Object.assign в prototype", "Обязательная часть любого класса", "Новый тип private поля", "Метод сортировки массива", "Событие DOM", "Форма наследования от двух классов через extends A, B"], 0, "Mixin подмешивает поведение без прямого множественного наследования."),
+  ];
 }
 
 function makeSummary(topic: TopicSeed) {
