@@ -27,6 +27,7 @@
 html {
   min-width: 320px;
   background: var(--paper);
+  overflow-x: clip;
 }
 
 body {
@@ -36,6 +37,7 @@ body {
     var(--paper);
   color: var(--ink);
   font-family: Arial, Helvetica, sans-serif;
+  overflow-x: clip;
 }
 
 button,
@@ -56,6 +58,7 @@ a {
 
 .shell {
   width: min(1180px, 100%);
+  min-width: 0;
   margin: 0 auto;
   padding: 18px;
 }
@@ -131,7 +134,10 @@ h1 {
 .modeTabs {
   display: flex;
   gap: 8px;
+  max-width: 100%;
+  contain: layout paint;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
   padding-bottom: 8px;
   scrollbar-width: none;
 }
@@ -167,6 +173,7 @@ h1 {
   grid-template-columns: 320px minmax(0, 1fr);
   gap: 16px;
   align-items: start;
+  min-width: 0;
   margin-top: 10px;
 }
 
@@ -175,8 +182,12 @@ h1 {
   top: 14px;
   display: grid;
   gap: 8px;
+  max-width: 100%;
+  min-width: 0;
   max-height: calc(100vh - 28px);
+  contain: layout paint;
   overflow: auto;
+  overscroll-behavior-x: contain;
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -207,10 +218,14 @@ h1 {
 }
 
 .topicButton span {
+  min-width: 0;
+  overflow-wrap: anywhere;
   font-weight: 850;
 }
 
 .topicButton small {
+  min-width: 0;
+  overflow-wrap: anywhere;
   color: var(--muted);
   line-height: 1.35;
 }
@@ -222,6 +237,7 @@ h1 {
 
 .content {
   min-width: 0;
+  max-width: 100%;
   padding: 16px;
   border: 1px solid var(--ink);
   border-radius: 8px;
@@ -232,6 +248,7 @@ h1 {
 .article,
 .trainer,
 .tasks {
+  min-width: 0;
   padding-top: 18px;
 }
 
@@ -279,6 +296,8 @@ h1 {
 }
 
 .article li {
+  min-width: 0;
+  overflow-wrap: anywhere;
   padding: 12px 12px 12px 38px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -302,6 +321,7 @@ h1 {
 .workExample,
 .partList,
 .cheatsheet {
+  min-width: 0;
   margin-top: 18px;
 }
 
@@ -316,6 +336,8 @@ h1 {
 
 .lessonBlock pre,
 .lessonPart pre {
+  max-width: 100%;
+  min-width: 0;
   margin: 0;
   overflow-x: auto;
   padding: 14px;
@@ -331,6 +353,9 @@ h1 {
 
 .lessonBlock code,
 .lessonPart code {
+  display: block;
+  min-width: 100%;
+  width: max-content;
   font-family: inherit;
 }
 
@@ -340,6 +365,7 @@ h1 {
 }
 
 .lessonPart {
+  min-width: 0;
   padding: 16px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -353,6 +379,7 @@ h1 {
 }
 
 .lessonPart p {
+  overflow-wrap: anywhere;
   margin-bottom: 12px;
 }
 
@@ -370,6 +397,8 @@ h1 {
 }
 
 .cheatsheet li {
+  min-width: 0;
+  overflow-wrap: anywhere;
   padding: 10px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -390,6 +419,7 @@ h1 {
 }
 
 .workExample p {
+  overflow-wrap: anywhere;
   margin-bottom: 0;
 }
 
@@ -440,9 +470,12 @@ h1 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+  min-width: 0;
 }
 
 .answers button {
+  min-width: 0;
+  overflow-wrap: anywhere;
   min-height: 64px;
   padding: 13px;
   border: 1px solid var(--line);
@@ -498,6 +531,7 @@ h1 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+  min-width: 0;
 }
 
 .taskCard {
@@ -512,11 +546,13 @@ h1 {
 }
 
 .taskCard h3 {
+  overflow-wrap: anywhere;
   margin-bottom: 0;
   font-size: 20px;
 }
 
 .taskCard p {
+  overflow-wrap: anywhere;
   margin-bottom: 0;
   color: var(--muted);
   line-height: 1.5;
@@ -590,6 +626,7 @@ a:focus-visible {
 
   .workspace {
     grid-template-columns: 1fr;
+    overflow-x: clip;
   }
 
   .topicList {
@@ -598,6 +635,7 @@ a:focus-visible {
     grid-auto-columns: minmax(220px, 78%);
     max-height: none;
     overflow-x: auto;
+    overflow-y: hidden;
   }
 
   .asideTitle {
